@@ -239,6 +239,7 @@ public class XML {
      * @return true if the close tag is processed.
      * @throws JSONException Thrown if any parsing error occurs.
      */
+    //Important function for class
     private static boolean parse(XMLTokener x, JSONObject context, String name, XMLParserConfiguration config, int currentNestingDepth)
             throws JSONException {
         char c;
