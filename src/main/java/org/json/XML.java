@@ -9,6 +9,7 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
+import java.util.Objects;
 
 import static org.json.NumberConversionUtil.potentialNumber;
 import static org.json.NumberConversionUtil.stringToNumber;
@@ -432,13 +433,9 @@ public class XML {
                                             && jsonObject.opt(config.getcDataTagName()) != null) {
                                         context.accumulate(tagName, jsonObject.opt(config.getcDataTagName()));
                                     } else {
-                                        if (!config.shouldTrimWhiteSpace()) {
-                                            removeEmpty(jsonObject, config);
-                                        }
                                         context.accumulate(tagName, jsonObject);
                                     }
                                 }
-
                                 return false;
                             }
                         }
@@ -475,7 +472,6 @@ public class XML {
         token = x.nextToken();
 
         // <!
-
         if (token == BANG) {
             c = x.next();
             if (c == '-') {
@@ -552,11 +548,9 @@ public class XML {
                     return false;
                 }
                 else {
-
-
                     // Rebuild the JSONPointer string without the first token
                     StringBuilder newPointerString = new StringBuilder();
-                    for (int j = 1; j < parts.length; j++) { // Start from 2 because tokens[0] is empty and tokens[1] is the first token
+                    for (int j = 2; j < parts.length; j++) { // Start from 2 because tokens[0] is empty and tokens[1] is the first token
                         newPointerString.append("/");
                         newPointerString.append(parts[j]);
                     }
@@ -626,7 +620,6 @@ public class XML {
                         }
                     }
                     return false;
-
                 } else if (token == GT)
                 {
                     // Content, between <...> and </...>
@@ -656,8 +649,25 @@ public class XML {
                             if (currentNestingDepth == config.getMaxNestingDepth()) {
                                 throw x.syntaxError("Maximum nesting depth of " + config.getMaxNestingDepth() + " reached");
                             }
-
-                            if (parse(x, jsonObject, tagName, config, currentNestingDepth + 1, targetPath)) {
+                            Object nextTag = x.nextToken();
+                            String newTargetPathString = targetPath.toString();
+                            String[] newParts = newTargetPathString.split("/");
+                            XMLTokener prevX=x;
+                            while(!x.end()){
+                                if (nextTag instanceof String && !Objects.equals(nextTag, newParts[1])){
+                                    skipTagContent(x, (String) nextTag);
+                                    x.skipPast("<");
+                                    prevX=x;
+                                    nextTag = x.nextToken();
+                                } else if (Objects.equals(nextTag, newParts[1])) {
+                                    x.skipPast("<");
+                                    break;
+                                }
+                            }
+                            if(x.end() && newParts.length >1){
+                                throw new JSONException("This path does not exist");
+                            }
+                            if (parse(prevX, jsonObject, tagName, config, currentNestingDepth + 1, targetPath)) {
                                 if (config.getForceList().contains(tagName)) {
                                     // Force the value to be an array
                                     if (jsonObject.length() == 0) {
@@ -675,15 +685,13 @@ public class XML {
                                             && jsonObject.opt(config.getcDataTagName()) != null) {
                                         context.accumulate(tagName, jsonObject.opt(config.getcDataTagName()));
                                     } else {
-                                        if (!config.shouldTrimWhiteSpace()) {
-                                            removeEmpty(jsonObject, config);
-                                        }
                                         context.accumulate(tagName, jsonObject);
                                     }
                                 }
 
                                 return false;
                             }
+
                         }
                     }
                 } else {
@@ -735,6 +743,15 @@ public class XML {
         }
         return true;
     }
+    private static void skipTagContent(XMLTokener x, String currentTagName) {
+        // Construct the closing tag to look for
+        String closingTag = "</" + currentTagName + ">";
+
+        // Use skipPast to move the tokener's position past the closing tag
+        x.skipPast(closingTag);
+        // At this point, x is positioned after the closingTag.
+        // The next token read should be the start of the next element or the document's end.
+    }
 
     /**
      * Convert a well-formed (but not necessarily valid) XML into a
@@ -758,7 +775,7 @@ public class XML {
      */
     public static JSONObject toJSONObject(Reader reader, XMLParserConfiguration config) throws JSONException {
         JSONObject jo = new JSONObject();
-        XMLTokener x = new XMLTokener(reader, config);
+        XMLTokener x = new XMLTokener(reader);
         while (x.more()) {
             x.skipPast("<");
             if(x.more()) {
@@ -768,7 +785,7 @@ public class XML {
         return jo;
     }
 
-    static JSONObject toJSONObject(Reader reader, JSONPointer path) {
+    public static JSONObject toJSONObject(Reader reader, JSONPointer path) {
         JSONObject jo = new JSONObject();
         XMLTokener x = new XMLTokener(reader);
         while (x.more()) {
