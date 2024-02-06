@@ -780,14 +780,7 @@ public class XML {
             String firstPart = "";
             if (parts.length > 1) {
                 firstPart = parts[1]; // parts[0] will be an empty string if the path starts with "/"
-                if (!firstPart.equals(tagName)) {
-                    // wrong path, don't need to keep processing
-//                    correct = false;
-                    skipTagContent(x, tagName);
-                    return false;
-                }
-                else {
-//                    correct = true;
+                if (firstPart.equals(tagName)) {
                     // Rebuild the JSONPointer string without the first token
                     StringBuilder newPointerString = new StringBuilder();
                     for (int j = 2; j < parts.length; j++) { // Start from 2 because tokens[0] is empty and tokens[1] is the first token
@@ -885,8 +878,8 @@ public class XML {
                             if (currentNestingDepth == config.getMaxNestingDepth()) {
                                 throw x.syntaxError("Maximum nesting depth of " + config.getMaxNestingDepth() + " reached");
                             }
-
                             if (parse(x, jsonObject, tagName, config, currentNestingDepth + 1, targetPath, replacement)) {
+
                                 if (config.getForceList().contains(tagName)) {
                                     // Force the value to be an array
                                     if (jsonObject.length() == 0) {

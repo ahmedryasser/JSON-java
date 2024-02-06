@@ -12,7 +12,7 @@ import org.json.XML;
 
 public class M2Test {
     public static void main(String[] args) throws FileNotFoundException {
-//        //test 1
+        //test 1
         String xmlString = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
                 "<contact>\n"+
                 "  <nick>Crista </nick>\n"+
@@ -53,7 +53,7 @@ public class M2Test {
 //                }
 //                myReader.close();
 //        try {
-//            JSONObject jobj = XML.toJSONObject(new StringReader(xmlString.toString()), new JSONPointer("/catalog/book/author/"));
+//            JSONObject jobj = XML.toJSONObject(new StringReader(xmlString.toString()), new JSONPointer("/catalog/book/1/"));
 //            System.out.println(jobj);
 //        } catch (JSONException e) {
 //            System.out.println(e);
