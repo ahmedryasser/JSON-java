@@ -455,6 +455,7 @@ public class XML {
         JSONObject jsonObject = null;
         String string;
         String tagName;
+        Boolean correct;
         Object token;
         XMLXsiTypeConverter<?> xmlXsiTypeConverter;
 
@@ -545,9 +546,12 @@ public class XML {
                 firstPart = parts[1]; // parts[0] will be an empty string if the path starts with "/"
                 if (!firstPart.equals(tagName)) {
                     // wrong path, don't need to keep processing
+//                    correct = false;
+                    skipTagContent(x, tagName);
                     return false;
                 }
                 else {
+//                    correct = true;
                     // Rebuild the JSONPointer string without the first token
                     StringBuilder newPointerString = new StringBuilder();
                     for (int j = 2; j < parts.length; j++) { // Start from 2 because tokens[0] is empty and tokens[1] is the first token
@@ -649,25 +653,25 @@ public class XML {
                             if (currentNestingDepth == config.getMaxNestingDepth()) {
                                 throw x.syntaxError("Maximum nesting depth of " + config.getMaxNestingDepth() + " reached");
                             }
-                            Object nextTag = x.nextToken();
-                            String newTargetPathString = targetPath.toString();
-                            String[] newParts = newTargetPathString.split("/");
-                            XMLTokener prevX=x;
-                            while(!x.end()){
-                                if (nextTag instanceof String && !Objects.equals(nextTag, newParts[1])){
-                                    skipTagContent(x, (String) nextTag);
-                                    x.skipPast("<");
-                                    prevX=x;
-                                    nextTag = x.nextToken();
-                                } else if (Objects.equals(nextTag, newParts[1])) {
-                                    x.skipPast("<");
-                                    break;
-                                }
-                            }
-                            if(x.end() && newParts.length >1){
-                                throw new JSONException("This path does not exist");
-                            }
-                            if (parse(prevX, jsonObject, tagName, config, currentNestingDepth + 1, targetPath)) {
+//                            Object nextTag = x.nextToken();
+//                            String newTargetPathString = targetPath.toString();
+//                            String[] newParts = newTargetPathString.split("/");
+//                            XMLTokener prevX=x;
+//                            while(!x.end()){
+//                                if (nextTag instanceof String && !Objects.equals(nextTag, newParts[1])){
+//                                    skipTagContent(x, (String) nextTag);
+//                                    x.skipPast("<");
+//                                    prevX=x;
+//                                    nextTag = x.nextToken();
+//                                } else if (Objects.equals(nextTag, newParts[1])) {
+//                                    x.skipPast("<");
+//                                    break;
+//                                }
+//                            }
+//                            if(x.end() && newParts.length >1){
+//                                throw new JSONException("This path does not exist");
+//                            }
+                            if (parse(x, jsonObject, tagName, config, currentNestingDepth + 1, targetPath)) {
                                 if (config.getForceList().contains(tagName)) {
                                     // Force the value to be an array
                                     if (jsonObject.length() == 0) {
@@ -688,7 +692,6 @@ public class XML {
                                         context.accumulate(tagName, jsonObject);
                                     }
                                 }
-
                                 return false;
                             }
 
