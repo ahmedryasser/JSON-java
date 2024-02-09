@@ -12,16 +12,16 @@ import org.json.XML;
 
 public class M2Test {
     public static void main(String[] args) throws FileNotFoundException {
-        //test 1
-        String xmlString = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
-                "<contact>\n"+
-                "  <nick>Crista </nick>\n"+
-                "  <name>Crista Lopes</name>\n" +
-                "  <address>\n" +
-                "    <street>Ave of Nowhere</street>\n" +
-                "    <zipcode>92614</zipcode>\n" +
-                "  </address>\n" +
-                "</contact>";
+//        //test 1
+//        String xmlString = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+//                "<contact>\n"+
+//                "  <nick>Crista </nick>\n"+
+//                "  <name>Crista Lopes</name>\n" +
+//                "  <address>\n" +
+//                "    <street>Ave of Nowhere</street>\n" +
+//                "    <zipcode>92614</zipcode>\n" +
+//                "  </address>\n" +
+//                "</contact>";
 //        try {
 //            JSONObject jobj = XML.toJSONObject(new StringReader(xmlString.toString()), new JSONPointer("/contact/address/street/"));
 //            System.out.println(jobj);
@@ -32,13 +32,13 @@ public class M2Test {
 //         //test 2
 //         File fileObject = new File("src/test/resources/XML/Sample-XML-With-Multiple-Records.xml");
 //                Scanner myReader = new Scanner(fileObject);
-//                StringBuilder xmlString = new StringBuilder();
+//                StringBuilder xmlString2 = new StringBuilder();
 //                while (myReader.hasNextLine()) {
-//                    xmlString.append(myReader.nextLine());
+//                    xmlString2.append(myReader.nextLine());
 //                }
 //                myReader.close();
 //        try {
-//            JSONObject jobj = XML.toJSONObject(new StringReader(xmlString.toString()), new JSONPointer("/CATALOG/PLANT/PRICE/"));
+//            JSONObject jobj = XML.toJSONObject(new StringReader(xmlString2.toString()), new JSONPointer("/CATALOG/PLANT/PRICE/"));
 //            System.out.println(jobj);
 //        } catch (JSONException e) {
 //            System.out.println(e);
@@ -47,13 +47,13 @@ public class M2Test {
 //         //test 3
 //         File fileObject = new File("src/test/resources/XML/small.xml");
 //                Scanner myReader = new Scanner(fileObject);
-//                StringBuilder xmlString = new StringBuilder();
+//                StringBuilder xmlString1 = new StringBuilder();
 //                while (myReader.hasNextLine()) {
-//                    xmlString.append(myReader.nextLine());
+//                    xmlString1.append(myReader.nextLine());
 //                }
 //                myReader.close();
 //        try {
-//            JSONObject jobj = XML.toJSONObject(new StringReader(xmlString.toString()), new JSONPointer("/catalog/book/1/"));
+//            JSONObject jobj = XML.toJSONObject(new StringReader(xmlString1.toString()), new JSONPointer("/catalog/book/1/"));
 //            System.out.println(jobj);
 //        } catch (JSONException e) {
 //            System.out.println(e);
@@ -63,10 +63,45 @@ public class M2Test {
 
         System.out.println("-----------------------");
 
+//        String xmlString = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+
+//                "<contact>\n"+
+//                "  <nick>Crista </nick>\n"+
+//                "  <name>Crista Lopes</name>\n" +
+//                "  <address>\n" +
+//                "    <street>Ave of Nowhere</street>\n" +
+//                "    <zipcode>92614</zipcode>\n" +
+//                "  </address>\n" +
+//                "</contact>";
+//        // t2 test1
+//        try {
+//            JSONObject replacement = XML.toJSONObject("<street>Ave of the Arts</street>\n");
+//            System.out.println("Given replacement: " + replacement);
+//            JSONObject jobj = XML.toJSONObject(new StringReader(xmlString), new JSONPointer("/contact/address/zipcode/"), replacement);
+//            System.out.println(jobj);
+//        } catch (JSONException e) {
+//            System.out.println(e);
+//        }
+//        // t2 test2
+//        try {
+//            JSONObject replacement = XML.toJSONObject("<street>Ave of the Arts</street>\n");
+//            System.out.println("Given replacement: " + replacement);
+//            JSONObject jobj = XML.toJSONObject(new StringReader(xmlString), new JSONPointer("/contact/address/"), replacement);
+//            System.out.println(jobj);
+//        } catch (JSONException e) {
+//            System.out.println(e);
+//        }
+         //test 3
+         File fileObject = new File("src/test/resources/XML/small.xml");
+                Scanner myReader = new Scanner(fileObject);
+                StringBuilder xmlString3 = new StringBuilder();
+                while (myReader.hasNextLine()) {
+                    xmlString3.append(myReader.nextLine());
+                }
+                myReader.close();
         try {
             JSONObject replacement = XML.toJSONObject("<street>Ave of the Arts</street>\n");
             System.out.println("Given replacement: " + replacement);
-            JSONObject jobj = XML.toJSONObject(new StringReader(xmlString), new JSONPointer("/contact/address/street/"), replacement);
+            JSONObject jobj = XML.toJSONObject(new StringReader(xmlString3.toString()), new JSONPointer("/catalog/book/"), replacement);
             System.out.println(jobj);
         } catch (JSONException e) {
             System.out.println(e);

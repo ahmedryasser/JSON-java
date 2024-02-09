@@ -695,6 +695,7 @@ public class XML {
         String tagName;
         Object token;
         XMLXsiTypeConverter<?> xmlXsiTypeConverter;
+        boolean replace = false;
 
 
         // Test for and skip past these forms:
@@ -780,7 +781,10 @@ public class XML {
             String firstPart = "";
             if (parts.length > 1) {
                 firstPart = parts[1]; // parts[0] will be an empty string if the path starts with "/"
-                if (firstPart.equals(tagName)) {
+                if (firstPart.equals(tagName) && parts.length == 2) {
+                    replace = true;
+                }
+                else if (firstPart.equals(tagName)) {
                     // Rebuild the JSONPointer string without the first token
                     StringBuilder newPointerString = new StringBuilder();
                     for (int j = 2; j < parts.length; j++) { // Start from 2 because tokens[0] is empty and tokens[1] is the first token
@@ -879,28 +883,31 @@ public class XML {
                                 throw x.syntaxError("Maximum nesting depth of " + config.getMaxNestingDepth() + " reached");
                             }
                             if (parse(x, jsonObject, tagName, config, currentNestingDepth + 1, targetPath, replacement)) {
-
-                                if (config.getForceList().contains(tagName)) {
-                                    // Force the value to be an array
-                                    if (jsonObject.length() == 0) {
-                                        context.put(tagName, new JSONArray());
-                                    } else if (jsonObject.length() == 1
-                                            && jsonObject.opt(config.getcDataTagName()) != null) {
-                                        context.append(tagName, jsonObject.opt(config.getcDataTagName()));
-                                    } else {
-                                        context.append(tagName, jsonObject);
-                                    }
-                                } else {
-                                    if (jsonObject.length() == 0) {
-                                        context.accumulate(tagName, "");
-                                    } else if (jsonObject.length() == 1
-                                            && jsonObject.opt(config.getcDataTagName()) != null) {
-                                        context.accumulate(tagName, jsonObject.opt(config.getcDataTagName()));
-                                    } else {
-                                        context.accumulate(tagName, jsonObject);
-                                    }
+                                if(replace){
+                                    jsonObject = replacement;
                                 }
-                                return false;
+                                if (config.getForceList().contains(tagName)) {
+                                        // Force the value to be an array
+                                        if (jsonObject.length() == 0) {
+                                            context.put(tagName, new JSONArray());
+                                        } else if (jsonObject.length() == 1
+                                                && jsonObject.opt(config.getcDataTagName()) != null) {
+                                            context.append(tagName, jsonObject.opt(config.getcDataTagName()));
+                                        } else {
+                                            context.append(tagName, jsonObject);
+                                        }
+                                    } else {
+                                        if (jsonObject.length() == 0) {
+                                            context.accumulate(tagName, "");
+                                        } else if (jsonObject.length() == 1
+                                                && jsonObject.opt(config.getcDataTagName()) != null) {
+                                            context.accumulate(tagName, jsonObject.opt(config.getcDataTagName()));
+                                        } else {
+                                            context.accumulate(tagName, jsonObject);
+                                        }
+                                    }
+                                    return false;
+
                             }
                         }
                     }
