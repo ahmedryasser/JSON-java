@@ -1,7 +1,7 @@
 ## Milestone 2
 
 ## Task 1: Parse XML Content Up to Specified JSONPointer Path
-The XML content is recursively traversed until the specified JSONPointer path is reached. Once the target path is identified, parsing halts, optimizing resource usage. This approach avoids parsing the entire XML file, enhancing efficiency, especially for large files.
+The XML content is recursively traversed until the specified JSONPointer path is reached. Once the target path is identified, parsing halts, optimizing resource usage. This approach avoids parsing the entire XML file, enhancing efficiency, especially for large files.By skipping the part of the file if it is not on the right path.
 
 ## Task 2: Replace Content at Specified JSONPointer Path
 Similar to Task 1, the XML content is traversed until the target path is found.
