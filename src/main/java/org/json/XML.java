@@ -986,11 +986,12 @@ public class XML {
             // Close tag </
 
             token = x.nextToken();
+            String cToken = keyTransformer.apply((String) token);
             if (name == null) {
-                throw x.syntaxError("Mismatched close tag " + token);
+                throw x.syntaxError("Mismatched close tag " + cToken);
             }
-            if (!token.equals(name)) {
-                throw x.syntaxError("Mismatched " + name + " and " + token);
+            if (!cToken.equals(name)) {
+                throw x.syntaxError("Mismatched " + name + " and " + cToken);
             }
             if (x.nextToken() != GT) {
                 throw x.syntaxError("Misshaped close tag");
@@ -1095,7 +1096,7 @@ public class XML {
                                 throw x.syntaxError("Maximum nesting depth of " + config.getMaxNestingDepth() + " reached");
                             }
 
-                            if (parse(x, jsonObject, tagName, config, currentNestingDepth + 1)) {
+                            if (parse(x, jsonObject, tagName, config, currentNestingDepth + 1, keyTransformer)) {
                                 if (config.getForceList().contains(tagName)) {
                                     // Force the value to be an array
                                     if (jsonObject.length() == 0) {

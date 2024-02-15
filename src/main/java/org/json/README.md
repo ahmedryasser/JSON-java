@@ -23,3 +23,16 @@ Tasks 1 and 2 are accomplished efficiently, ensuring accurate parsing and replac
 ## Unit Tests
 - Unit tests are provided to ensure the correctness of the new toJSONObject methods.
 - These tests cover both obtaining correct results and testing error conditions to ensure robustness. Find the test cases in json-java/src/main/M2test.java
+
+## Running instructions for Milestone 2
+On Intellij: \
+- Navigate to the run configurations button and select the plus sign then application
+- next select Java 21 as the SDK, and download it (click the download sdk button) if you don't have it.
+- Then click on the paper icon in the field directly to its right and navigate to M2Test.java by going through LAB2-Code/ and click on M2Test \
+- Click ok, then apply, and click on the green run button to run the project
+
+Possible issues: SystemMain is not selectable in java. \
+Fix: Click on the Lab2-Code directory in Lab2-Code and right click. Then click on mark directory as. Then click on sources root.
+
+## Running instructions for Milestone 3
+-Same as Milestone 2 but run M3Test.java instead of M2Test.java
