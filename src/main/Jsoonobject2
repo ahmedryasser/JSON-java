@@ -3,8 +3,16 @@ package org.json;
 /*
 Public Domain.
 */
-import java.util.stream.IntStream;
 import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -28,8 +36,6 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static org.json.NumberConversionUtil.potentialNumber;
 import static org.json.NumberConversionUtil.stringToNumber;
@@ -93,6 +99,7 @@ public class JSONObject {
      * whilst Java's null is equivalent to the value that JavaScript calls
      * undefined.
      */
+
     private static final class Null {
 
         /**
@@ -149,7 +156,7 @@ public class JSONObject {
     /**
      * The map where the JSONObject's properties are kept.
      */
-    private final Map<String, Object> map;
+    private Map<String, Object> map = null;
 
     public Class<? extends Map> getMapType() {
         return map.getClass();
@@ -216,12 +223,12 @@ public class JSONObject {
         for (;;) {
             c = x.nextClean();
             switch (c) {
-                case 0:
-                    throw x.syntaxError("A JSONObject text must end with '}'");
-                case '}':
-                    return;
-                default:
-                    key = x.nextSimpleValue(c).toString();
+            case 0:
+                throw x.syntaxError("A JSONObject text must end with '}'");
+            case '}':
+                return;
+            default:
+                key = x.nextSimpleValue(c).toString();
             }
 
             // The key is followed by ':'.
@@ -249,20 +256,20 @@ public class JSONObject {
             // Pairs are separated by ','.
 
             switch (x.nextClean()) {
-                case ';':
-                case ',':
-                    if (x.nextClean() == '}') {
-                        return;
-                    }
-                    if (x.end()) {
-                        throw x.syntaxError("A JSONObject text must end with '}'");
-                    }
-                    x.back();
-                    break;
-                case '}':
+            case ';':
+            case ',':
+                if (x.nextClean() == '}') {
                     return;
-                default:
-                    throw x.syntaxError("Expected a ',' or '}'");
+                }
+                if (x.end()) {
+                    throw x.syntaxError("A JSONObject text must end with '}'");
+                }
+                x.back();
+                break;
+            case '}':
+                return;
+            default:
+                throw x.syntaxError("Expected a ',' or '}'");
             }
         }
     }
@@ -279,7 +286,7 @@ public class JSONObject {
      *            If a key in the map is <code>null</code>
      */
     public JSONObject(Map<?, ?> m) {
-        this(m, 0, new JSONParserConfiguration());
+      this(m, 0, new JSONParserConfiguration());
     }
 
     /**
@@ -301,16 +308,16 @@ public class JSONObject {
      */
     private JSONObject(Map<?, ?> m, int recursionDepth, JSONParserConfiguration jsonParserConfiguration) {
         if (recursionDepth > jsonParserConfiguration.getMaxNestingDepth()) {
-            throw new JSONException("JSONObject has reached recursion depth limit of " + jsonParserConfiguration.getMaxNestingDepth());
+          throw new JSONException("JSONObject has reached recursion depth limit of " + jsonParserConfiguration.getMaxNestingDepth());
         }
         if (m == null) {
             this.map = new HashMap<String, Object>();
         } else {
             this.map = new HashMap<String, Object>(m.size());
-            for (final Entry<?, ?> e : m.entrySet()) {
-                if(e.getKey() == null) {
-                    throw new NullPointerException("Null key.");
-                }
+        	for (final Entry<?, ?> e : m.entrySet()) {
+        	    if(e.getKey() == null) {
+        	        throw new NullPointerException("Null key.");
+        	    }
                 final Object value = e.getValue();
                 if (value != null) {
                     testValidity(value);
@@ -639,11 +646,11 @@ public class JSONObject {
         Object object = this.get(key);
         if (object.equals(Boolean.FALSE)
                 || (object instanceof String && ((String) object)
-                .equalsIgnoreCase("false"))) {
+                        .equalsIgnoreCase("false"))) {
             return false;
         } else if (object.equals(Boolean.TRUE)
                 || (object instanceof String && ((String) object)
-                .equalsIgnoreCase("true"))) {
+                        .equalsIgnoreCase("true"))) {
             return true;
         }
         throw wrongValueFormatException(key, "Boolean", object, null);
@@ -1024,9 +1031,9 @@ public class JSONObject {
      *        is empty.
      */
     public JSONArray names() {
-        if(this.map.isEmpty()) {
-            return null;
-        }
+    	if(this.map.isEmpty()) {
+    		return null;
+    	}
         return new JSONArray(this.map.keySet());
     }
 
@@ -1824,8 +1831,141 @@ public class JSONObject {
             key = key.substring(0, 1).toLowerCase(Locale.ROOT) + key.substring(1);
         }
         return key;
+
+
+    }
+    public Stream<JSONNode> toStream() {
+        return toStream(this);
     }
 
+    private Stream<JSONNode> toStream(Object json) {
+        if (json instanceof JSONObject) {
+            JSONObject jsonObject = (JSONObject) json;
+            Stream<JSONNode> objectStream = Stream.of(new JSONNode(jsonObject));
+            Stream<JSONNode> nestedStream = jsonObject.keySet()
+                    .stream()
+                    .map(key -> toStream(jsonObject.get(key))
+                            .map(node -> new JSONNode(node, key)));
+            return Stream.concat(objectStream, nestedStream.flatMap(s -> s));
+        } else if (json instanceof JSONArray) {
+            JSONArray jsonArray = (JSONArray) json;
+            return StreamSupport.stream(jsonArray.spliterator(), false)
+                    .flatMap(element -> toStream(element).map(node -> new JSONNode(node, "")));
+        } else {
+            return Stream.of(new JSONNode(json));
+        }
+    }
+
+    public static class JSONNode {
+        private final Object value;
+        private final String key;
+
+        public JSONNode(Object value, String key) {
+            this.value = value;
+            this.key = key;
+        }
+
+        public JSONNode(Object value) {
+            this(value, "");
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        public String getKey() {
+            return key;
+        }
+    }
+//    // milestone 4
+//
+//    public Stream<Object> toStream() {
+//        Stream.Builder<Object> builder = Stream.builder();
+//        addValues(jsonObject, builder);
+//        return builder.build();
+//    }
+//
+//    private void addValues(Object object, Stream.Builder<Object> builder) {
+//        if (object instanceof org.json.JSONObject) {
+//            org.json.JSONObject jsonObject = (org.json.JSONObject) object;
+//            jsonObject.keySet().forEach(key -> {
+//                builder.accept(jsonObject.get(key));
+//                addValues(jsonObject.get(key), builder);
+//            });
+//        } else if (object instanceof org.json.JSONArray) {
+//            org.json.JSONArray jsonArray = (org.json.JSONArray) object;
+//            jsonArray.forEach(item -> {
+//                builder.accept(item);
+//                addValues(item, builder);
+//            });
+//        }
+//    }
+//// milestone 4
+//public JSONObject(String json) {
+//    this.jsonObject = new org.json.JSONObject(json);
+//}
+//
+//    public Stream<Object> toStream() {
+//        Stream.Builder<Object> builder = Stream.builder();
+//        addValues(jsonObject, builder);
+//        return builder.build();
+//    }
+//
+//    private void addValues(Object object, Stream.Builder<Object> builder) {
+//        if (object instanceof org.json.JSONObject) {
+//            org.json.JSONObject jsonObject = (org.json.JSONObject) object;
+//            jsonObject.keySet().forEach(key -> {
+//                builder.accept(jsonObject.get(key));
+//                addValues(jsonObject.get(key), builder);
+//            });
+//        } else if (object instanceof org.json.JSONArray) {
+//            org.json.JSONArray jsonArray = (org.json.JSONArray) object;
+//            jsonArray.forEach(item -> {
+//                builder.accept(item);
+//                addValues(item, builder);
+//            });
+//        }
+//    }
+//
+//    public JSONObject filter(Predicate<Object> predicate) {
+//        Objects.requireNonNull(predicate);
+//        return new JSONObject(jsonObjectFilter(predicate));
+//    }
+//
+//    public void forEach(Consumer<Object> action) {
+//        Objects.requireNonNull(action);
+//        toStream().forEach(action);
+//    }
+//
+//    public <R> Stream<R> map(Function<Object, R> mapper) {
+//        Objects.requireNonNull(mapper);
+//        return toStream().map(mapper);
+//    }
+
+    private org.json.JSONObject jsonObjectFilter(Predicate<Object> predicate) {
+        org.json.JSONObject filtered = new org.json.JSONObject();
+        toStream()
+                .filter(obj -> {
+                    if (obj instanceof JSONObject) {
+                        return predicate.test(obj);
+                    } else if (obj instanceof JSONArray) {
+                        JSONArray array = (JSONArray) obj;
+                        for (int i = 0; i < array.length(); i++) {
+                            if (predicate.test(array.get(i))) {
+                                filtered.append(String.valueOf(i), array.get(i));
+                            }
+                        }
+                    }
+                    return false;
+                })
+                .forEach(obj -> {
+                    if (obj instanceof JSONObject) {
+                        filtered.put(obj.toString(), obj);
+                    }
+                });
+        return filtered;
+    }
+}
     /**
      * Searches the class hierarchy to see if the method or it's super
      * implementations and interfaces has the annotation.
@@ -2194,7 +2334,7 @@ public class JSONObject {
      * @throws IllegalArgumentException if {@code jsonPointer} has invalid syntax
      */
     public Object optQuery(String jsonPointer) {
-        return optQuery(new JSONPointer(jsonPointer));
+    	return optQuery(new JSONPointer(jsonPointer));
     }
 
     /**
@@ -2252,42 +2392,42 @@ public class JSONObject {
             b = c;
             c = string.charAt(i);
             switch (c) {
-                case '\\':
-                case '"':
+            case '\\':
+            case '"':
+                w.write('\\');
+                w.write(c);
+                break;
+            case '/':
+                if (b == '<') {
                     w.write('\\');
+                }
+                w.write(c);
+                break;
+            case '\b':
+                w.write("\\b");
+                break;
+            case '\t':
+                w.write("\\t");
+                break;
+            case '\n':
+                w.write("\\n");
+                break;
+            case '\f':
+                w.write("\\f");
+                break;
+            case '\r':
+                w.write("\\r");
+                break;
+            default:
+                if (c < ' ' || (c >= '\u0080' && c < '\u00a0')
+                        || (c >= '\u2000' && c < '\u2100')) {
+                    w.write("\\u");
+                    hhhh = Integer.toHexString(c);
+                    w.write("0000", 0, 4 - hhhh.length());
+                    w.write(hhhh);
+                } else {
                     w.write(c);
-                    break;
-                case '/':
-                    if (b == '<') {
-                        w.write('\\');
-                    }
-                    w.write(c);
-                    break;
-                case '\b':
-                    w.write("\\b");
-                    break;
-                case '\t':
-                    w.write("\\t");
-                    break;
-                case '\n':
-                    w.write("\\n");
-                    break;
-                case '\f':
-                    w.write("\\f");
-                    break;
-                case '\r':
-                    w.write("\\r");
-                    break;
-                default:
-                    if (c < ' ' || (c >= '\u0080' && c < '\u00a0')
-                            || (c >= '\u2000' && c < '\u2100')) {
-                        w.write("\\u");
-                        hhhh = Integer.toHexString(c);
-                        w.write("0000", 0, 4 - hhhh.length());
-                        w.write(hhhh);
-                    } else {
-                        w.write(c);
-                    }
+                }
             }
         }
         w.write('"');
@@ -2327,10 +2467,10 @@ public class JSONObject {
                 Object valueThis = entry.getValue();
                 Object valueOther = ((JSONObject)other).get(name);
                 if(valueThis == valueOther) {
-                    continue;
+                	continue;
                 }
                 if(valueThis == null) {
-                    return false;
+                	return false;
                 }
                 if (valueThis instanceof JSONObject) {
                     if (!((JSONObject)valueThis).similar(valueOther)) {
@@ -2342,11 +2482,11 @@ public class JSONObject {
                     }
                 } else if (valueThis instanceof Number && valueOther instanceof Number) {
                     if (!isNumberSimilar((Number)valueThis, (Number)valueOther)) {
-                        return false;
+                    	return false;
                     }
                 } else if (valueThis instanceof JSONString && valueOther instanceof JSONString) {
                     if (!((JSONString) valueThis).toJSONString().equals(((JSONString) valueOther).toJSONString())) {
-                        return false;
+                    	return false;
                     }
                 } else if (!valueThis.equals(valueOther)) {
                     return false;
@@ -2578,10 +2718,10 @@ public class JSONObject {
      *             If the value is or contains an invalid number.
      */
     public static String valueToString(Object value) throws JSONException {
-        // moves the implementation to JSONWriter as:
-        // 1. It makes more sense to be part of the writer class
-        // 2. For Android support this method is not available. By implementing it in the Writer
-        //    Android users can use the writer with the built in Android JSONObject implementation.
+    	// moves the implementation to JSONWriter as:
+    	// 1. It makes more sense to be part of the writer class
+    	// 2. For Android support this method is not available. By implementing it in the Writer
+    	//    Android users can use the writer with the built in Android JSONObject implementation.
         return JSONWriter.valueToString(value);
     }
 
@@ -2618,11 +2758,11 @@ public class JSONObject {
      * @return The wrapped value
      */
     static Object wrap(Object object, int recursionDepth, JSONParserConfiguration jsonParserConfiguration) {
-        return wrap(object, null, recursionDepth, jsonParserConfiguration);
+      return wrap(object, null, recursionDepth, jsonParserConfiguration);
     }
 
     private static Object wrap(Object object, Set<Object> objectsRecord) {
-        return wrap(object, objectsRecord, 0, new JSONParserConfiguration());
+      return wrap(object, objectsRecord, 0, new JSONParserConfiguration());
     }
 
     private static Object wrap(Object object, Set<Object> objectsRecord, int recursionDepth, JSONParserConfiguration jsonParserConfiguration) {
@@ -2688,7 +2828,7 @@ public class JSONObject {
 
     @SuppressWarnings("resource")
     static final Writer writeValue(Writer writer, Object value,
-                                   int indentFactor, int indent) throws JSONException, IOException {
+            int indentFactor, int indent) throws JSONException, IOException {
         if (value == null || value.equals(null)) {
             writer.write("null");
         } else if (value instanceof JSONString) {
@@ -2773,7 +2913,7 @@ public class JSONObject {
             writer.write('{');
 
             if (length == 1) {
-                final Entry<String,?> entry = this.entrySet().iterator().next();
+            	final Entry<String,?> entry = this.entrySet().iterator().next();
                 final String key = entry.getKey();
                 writer.write(quote(key));
                 writer.write(':');
@@ -2883,58 +3023,9 @@ public class JSONObject {
      */
     private static JSONException recursivelyDefinedObjectException(String key) {
         return new JSONException(
-                "JavaBean object contains recursively defined member variable of key " + quote(key)
+            "JavaBean object contains recursively defined member variable of key " + quote(key)
         );
     }
-    // milestone 4
 
-
-    public Stream<JSONNode> toStream() {
-        return toStream(this, "");
-    }
-
-    private Stream<JSONNode> toStream(Object json, String keyPrefix) {
-        if (json instanceof JSONObject) {
-            JSONObject jsonObject = (JSONObject) json;
-            Stream<JSONNode> objectStream = Stream.of(new JSONNode(jsonObject, keyPrefix)); // Include prefix for object node
-            Stream<JSONNode> nestedStream = jsonObject.keySet()
-                    .stream()
-                    .flatMap(key -> toStream(jsonObject.get(key), keyPrefix + key + "/")); // Append key to prefix for nested nodes
-            return Stream.concat(objectStream, nestedStream);
-        } else if (json instanceof JSONArray) {
-            JSONArray jsonArray = (JSONArray) json;
-            return IntStream.range(0, jsonArray.length())
-                    .mapToObj(i -> jsonArray.get(i))
-                    .flatMap(element -> toStream(element, keyPrefix)); // Recursively flatten nested arrays
-        } else {
-            return Stream.of(new JSONNode(json, keyPrefix)); // Include prefix for leaf nodes
-        }
-    }
-
-
-
-
-
-    public static class JSONNode {
-        private final Object value;
-        private final String key;
-
-        public JSONNode(Object value, String key) {
-            this.value = value;
-            this.key = key;
-        }
-
-        public JSONNode(Object value) {
-            this(value, "");
-        }
-
-        public Object getValue() {
-            return value;
-        }
-
-        public String getKey() {
-            return key;
-        }
-    }
 
 }
