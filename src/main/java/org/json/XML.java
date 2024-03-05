@@ -1127,48 +1127,6 @@ public class XML {
             }
         }
     }
-
-    /**
-     * This method removes any JSON entry which has the key set by XMLParserConfiguration.cDataTagName
-     * and contains whitespace as this is caused by whitespace between tags. See test XMLTest.testNestedWithWhitespaceTrimmingDisabled.
-     * @param jsonObject JSONObject which may require deletion
-     * @param config The XMLParserConfiguration which includes the cDataTagName
-     */
-    private static void removeEmpty(final JSONObject jsonObject, final XMLParserConfiguration config) {
-        if (jsonObject.has(config.getcDataTagName()))  {
-            final Object s = jsonObject.get(config.getcDataTagName());
-            if (s instanceof String) {
-                if (isStringAllWhiteSpace(s.toString())) {
-                    jsonObject.remove(config.getcDataTagName());
-                }
-            }
-            else if (s instanceof JSONArray) {
-                final JSONArray sArray = (JSONArray) s;
-                for (int k = sArray.length()-1; k >= 0; k--){
-                    final Object eachString = sArray.get(k);
-                    if (eachString instanceof String) {
-                        String s1 = (String) eachString;
-                        if (isStringAllWhiteSpace(s1)) {
-                            sArray.remove(k);
-                        }
-                    }
-                }
-                if (sArray.isEmpty()) {
-                    jsonObject.remove(config.getcDataTagName());
-                }
-            }
-        }
-    }
-
-    private static boolean isStringAllWhiteSpace(final String s) {
-        for (int k = 0; k<s.length(); k++){
-            final char eachChar = s.charAt(k);
-            if (!Character.isWhitespace(eachChar)) {
-                return false;
-            }
-        }
-        return true;
-    }
     private static void skipTagContent(XMLTokener x, String currentTagName) {
         // Construct the closing tag to look for
         String closingTag = "</" + currentTagName + ">";
@@ -1207,7 +1165,7 @@ public class XML {
         }
         return jo;
     }
-    static JSONObject toJSONObject(Reader reader, Function<String,String> keyTransformer){
+    public static JSONObject toJSONObject(Reader reader, Function<String, String> keyTransformer){
         JSONObject jo = new JSONObject();
         XMLTokener x = new XMLTokener(reader);
         while (x.more()) {
