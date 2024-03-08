@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.function.Function;
@@ -19,15 +20,24 @@ import java.util.stream.Stream;
 import static org.junit.Assert.assertEquals;
 
 public class M4test{
+    private JSONNodeConverter converter = new JSONNodeConverter();
+    @Test
+    public void testSimpleJSONObject() {
+        JSONObject json = new JSONObject();
+        json.put("key1", "value1");
+        json.put("key2", 2);
+        long count = converter.toStream(json).count();
+        assertEquals(3L, count);
+    }
 
     @Test
     public void testJSONObjectToStreamFilter() {
         String xml = "<Books><book><title>Harry potter</title><author>Rowling</author></book><book><title>win friends</title><author>dale</author></book></Books>";
         Reader reader = new StringReader(xml);
         JSONObject obj = XML.toJSONObject(reader, Function.identity());
-
+        Stream<JSONObject.JSONNode> stream = new JSONNodeConverter().toStream(obj);
         // Extract titles from JSON nodes
-        List<String> titles = obj.toStream()
+        List<String> titles = stream
                 .filter(node -> node.getKey().contains("title"))
                 .map(JSONObject.JSONNode::getValue)
                 .map(String::valueOf)
@@ -40,14 +50,12 @@ public class M4test{
         String xml = "<Books><book><title>Zot</title><author>Carson</author></book><book><title>Styles</title><author>Ahmed</author></book><book><title>Data structures</title><author>Micheal</author></book></Books>";
         Reader reader = new StringReader(xml);
         JSONObject obj = XML.toJSONObject(reader, Function.identity());
-//        String xml = "<Books><book><title>AAA</title><author>ASmith</author></book><book><title>BBB</title><author>BSmith</author></book></Books>";
-//
-        List<String> authors = obj.toStream()
+        List<String> authors = converter.toStream(obj)
                 .filter(node -> node.getKey().contains("author"))
                 .map(JSONObject.JSONNode::getValue)
                 .map(String::valueOf).sorted()
                 .collect(Collectors.toList());
-        assertEquals("[Ahmed, Carson, Micheal]", authors.toString());
+        assertEquals(Arrays.asList("Ahmed", "Carson", "Micheal"), authors);
     }
 
     @Test

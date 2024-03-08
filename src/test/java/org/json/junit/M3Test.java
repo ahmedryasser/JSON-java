@@ -28,6 +28,7 @@ public class M3Test {
                     "</contact>";
             Reader reader = new StringReader(xml);
             JSONObject result = XML.toJSONObject(reader, Function.identity());
+            System.out.println(result.toString());
             assertEquals("{\"contact\":{\"nick\":\"Crista\",\"address\":{\"zipcode\":92614,\"street\":\"Ave of Nowhere\"},\"name\":\"Crista Lopes\"}}", result.toString());
         }
 
