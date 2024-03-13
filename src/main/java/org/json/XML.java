@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.json.NumberConversionUtil.potentialNumber;
@@ -1331,8 +1333,19 @@ public class XML {
         return toJSONObject(reader, XMLParserConfiguration.ORIGINAL);
     }
 
-
-
+    public static void toJSONObjectAsync(Reader xmlReader, Consumer<JSONObject> successCallback, Consumer<Exception> errorCallback) {
+        new Thread(() -> {
+            try {
+                // Assuming XML.toJSONObject(Reader) is a method that converts XML to a JSONObject
+                JSONObject jsonObject = XML.toJSONObject(xmlReader);
+                // Call success callback on the main thread or the calling thread
+                successCallback.accept(jsonObject);
+            } catch (Exception e) {
+                // Call error callback on the main thread or the calling thread
+                errorCallback.accept(e);
+            }
+        }).start(); // Start the thread to perform the asynchronous operation
+    }
 
 
 
