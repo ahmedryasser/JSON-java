@@ -1336,15 +1336,15 @@ public class XML {
     public static void toJSONObjectAsync(Reader xmlReader, Consumer<JSONObject> successCallback, Consumer<Exception> errorCallback) {
         new Thread(() -> {
             try {
-                // Assuming XML.toJSONObject(Reader) is a method that converts XML to a JSONObject
+                //calls the regular transformation function inside the thread
                 JSONObject jsonObject = XML.toJSONObject(xmlReader);
-                // Call success callback on the main thread or the calling thread
+                //call success callback on the main thread or the calling thread
                 successCallback.accept(jsonObject);
             } catch (Exception e) {
-                // Call error callback on the main thread or the calling thread
+                //call error callback on the main thread or the calling thread
                 errorCallback.accept(e);
             }
-        }).start(); // Start the thread to perform the asynchronous operation
+        }).start(); //starts the thread to perform the asynchronous operation
     }
 
 

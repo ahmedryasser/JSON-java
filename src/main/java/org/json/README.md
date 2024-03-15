@@ -49,3 +49,10 @@ On Intellij: \
 
 ## Unit Tests
 - These tests cover both obtaining correct results and testing error conditions to ensure robustness. Find the test cases in json-java/src/test/java/org.json/junit/data/M4test.java
+
+## Milestone 5: Asynchronous Programming
+- We introduced asynchronous processing capabilities to an XML-to-JSONObject conversion library, enhancing its utility for handling potentially large XML files without blocking the executing thread. 
+- This approach significantly improves the responsiveness of applications that rely on this functionality, allowing them to remain interactive or continue with other tasks while the conversion takes place in the background.
+
+## Unit Tests
+- These tests cover both obtaining correct results and testing error conditions to ensure robustness. Find the test cases in json-java/src/test/java/org.json/junit/data/M5test.java

@@ -30,6 +30,12 @@ public class M5test {
         CountDownLatch latch = new CountDownLatch(1);
 
         //Success Callback
+
+        //consumers
+        //List<String> names = Arrays.asList("John", "Jane", "Doe");
+        //Consumer<String> printConsumer = name -> System.out.println(name);
+        //names.forEach(printConsumer);
+        
         Consumer<JSONObject> successCallback = (JSONObject json) -> {
             // asserts correct value
             assertEquals("value", json.getJSONObject("root").getString("test"));
