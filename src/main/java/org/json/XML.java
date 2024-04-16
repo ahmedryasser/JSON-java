@@ -449,7 +449,7 @@ public class XML {
             }
         }
     }
-
+// Milestone 2 task 1
 
     private static boolean parse(XMLTokener x, JSONObject context, String name, XMLParserConfiguration config, int currentNestingDepth, JSONPointer targetPath)
             throws JSONException {
@@ -780,7 +780,7 @@ public class XML {
             jsonObject = new JSONObject();
             String targetPathString = targetPath.toString();
             String[] parts = targetPathString.split("/");
-
+// Milestone 2 task 2
             String firstPart = "";
             if (parts.length > 1) {
                 firstPart = parts[1]; // parts[0] will be an empty string if the path starts with "/"
@@ -986,7 +986,7 @@ public class XML {
         } else if (token == SLASH) {
 
             // Close tag </
-
+// Milestone 3
             token = x.nextToken();
             String cToken = keyTransformer.apply((String) token);
             if (name == null) {
@@ -1097,7 +1097,7 @@ public class XML {
                             if (currentNestingDepth == config.getMaxNestingDepth()) {
                                 throw x.syntaxError("Maximum nesting depth of " + config.getMaxNestingDepth() + " reached");
                             }
-
+// Done
                             if (parse(x, jsonObject, tagName, config, currentNestingDepth + 1, keyTransformer)) {
                                 if (config.getForceList().contains(tagName)) {
                                     // Force the value to be an array
@@ -1332,7 +1332,7 @@ public class XML {
         }
         return toJSONObject(reader, XMLParserConfiguration.ORIGINAL);
     }
-
+// Milestone 5
     public static void toJSONObjectAsync(Reader xmlReader, Consumer<JSONObject> successCallback, Consumer<Exception> errorCallback) {
         new Thread(() -> {
             try {
